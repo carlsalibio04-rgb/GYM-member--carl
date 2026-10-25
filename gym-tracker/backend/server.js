@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
-
+const PORT = proccess.env.PORT || 8080;
 const app = express();
 
 app.use(cors());
@@ -259,7 +259,7 @@ app.put("/api/plans/:id", updatePlanPrice);
 // START SERVER
 // ==========================================
 
-const PORT = 8080;
+
 
 app.listen(PORT, () => {
 
