@@ -4,9 +4,10 @@
   "description": "Gym Membership System Backend",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
+  "dev": "node server.js",
+  "build": "vite build",
+  "preview": "vite preview"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
