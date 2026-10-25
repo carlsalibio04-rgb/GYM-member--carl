@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "Gym Membership System Backend",
   "main": "server.js",
-  "scripts": {
-  "dev": "node server.js",
-  "build": "vite build",
-  "preview": "vite preview"
+ "scripts": {
+  "start": "node server.js",
+  "dev": "node server.js"
 },
   "keywords": [],
   "author": "",
