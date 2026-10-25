@@ -53,7 +53,7 @@ export default function MemberDashboard({ user, onLogout }) {
                 setLoading(true);
                 setError("");
 
-                const response = await fetch("http://localhost:8080/api/plans");
+                const response = await fetch("https://gym-member-carl.onrender.com/api/plans");
 
                 if (!response.ok) {
                     throw new Error("Failed to load membership plans.");

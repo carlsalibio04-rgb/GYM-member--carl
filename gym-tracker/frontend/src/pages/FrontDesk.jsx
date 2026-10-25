@@ -14,7 +14,7 @@ import {
 
 import { db } from "../lib/firebase.js";
 
-const PLANS_URL = "http://localhost:8080/api/plans";
+const PLANS_URL = "https://gym-member-carl.onrender.com/api/plans";
 
 const emptyForm = {
     name: "",

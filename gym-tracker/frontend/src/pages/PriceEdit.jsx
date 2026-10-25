@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-const API_URL = "http://localhost:8080/api/plans";
+const API_URL = "https://gym-member-carl.onrender.com/api/plans";
 
 export default function PriceEdit({ user, onLogout }) {
     const [plans, setPlans] = useState([]);
