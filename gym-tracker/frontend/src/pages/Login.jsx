@@ -56,6 +56,8 @@ export default function Login() {
         try {
             setLoading(true);
             const provider = new GoogleAuthProvider();
+            // always show the Google account chooser instead of auto-logging into the last account
+            provider.setCustomParameters({ prompt: "select_account" });
             const result = await signInWithPopup(auth, provider);
             await goToDashboard(result.user);
         } catch (error) {

@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    collection,
-    getDocs,
-    query,
-    where
-} from "firebase/firestore";
-
-import { db } from "../lib/firebase.js";
+const PAYMENTS_URL = "https://gym-member-carl.onrender.com/api/payments";
 
 const getTimeLeft = (expirationDate, now) => {
     if (!expirationDate) return null;
@@ -78,22 +71,17 @@ export default function MemberDashboard({ user, onLogout }) {
             if (!user) return;
 
             try {
-                const q = query(
-                    collection(db, "payments"),
-                    where("uid", "==", user.uid)
-                );
+                const response = await fetch(PAYMENTS_URL);
 
-                const snapshot = await getDocs(q);
-                const data = snapshot.docs.map((document) => ({
-                    id: document.id,
-                    ...document.data()
-                }));
+                if (!response.ok) {
+                    throw new Error("Server error " + response.status);
+                }
 
-                data.sort((a, b) => {
-                    const aTime = a.createdAt?.toMillis?.() || 0;
-                    const bTime = b.createdAt?.toMillis?.() || 0;
-                    return bTime - aTime;
-                });
+                const all = await response.json();
+
+                const data = all
+                    .filter((payment) => String(payment.uid) === String(user.uid))
+                    .sort((a, b) => Number(b.id) - Number(a.id));
 
                 const pending = data.find((payment) => payment.status === "Pending");
                 setPendingPayment(pending || null);

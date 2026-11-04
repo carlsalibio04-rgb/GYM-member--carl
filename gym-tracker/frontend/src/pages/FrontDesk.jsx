@@ -1,27 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    orderBy,
-    query,
-    serverTimestamp,
-    updateDoc
-} from "firebase/firestore";
-
-import { db } from "../lib/firebase.js";
 
 const PLANS_URL = "https://gym-member-carl.onrender.com/api/plans";
+const API_URL = "https://gym-member-carl.onrender.com/api/payments";
 
 const emptyForm = {
-    name: "",
-    email: "",
-    plan: "",
-    amount: "",
-    duration: "",
+    name: "poko",
+    email: "poko@gmail.com",
+    plan: "weekly",
+    amount: "100",
+    duration: "30Days",
     paymentMethod: "Cash",
     status: "Approved"
 };
@@ -82,18 +70,16 @@ export default function FrontDesk({ user, onLogout }) {
         try {
             setLoading(true);
 
-            const paymentsQuery = query(
-                collection(db, "payments"),
-                orderBy("createdAt", "desc")
-            );
+            const response = await fetch(API_URL);
 
-            const snapshot = await getDocs(paymentsQuery);
-            setPayments(
-                snapshot.docs.map((document) => ({
-                    id: document.id,
-                    ...document.data()
-                }))
-            );
+            if (!response.ok) {
+                throw new Error("Server error " + response.status);
+            }
+
+            const data = await response.json();
+
+            // newest first
+            setPayments([...data].sort((a, b) => Number(b.id) - Number(a.id)));
         } catch (error) {
             console.error("Failed to load payments:", error);
             alert("Unable to load payment records: " + error.message);
@@ -202,14 +188,8 @@ export default function FrontDesk({ user, onLogout }) {
             setSaving(true);
 
             if (modalMode === "add") {
-                await addDoc(collection(db, "payments"), {
-                    ...data,
-                    uid: null,
-                    createdAt: serverTimestamp()
-                });
                 alert("Payment added successfully!");
             } else {
-                await updateDoc(doc(db, "payments", editing.id), data);
                 alert("Payment updated successfully!");
             }
 
@@ -232,7 +212,6 @@ export default function FrontDesk({ user, onLogout }) {
         }
 
         try {
-            await deleteDoc(doc(db, "payments", payment.id));
             alert("Payment deleted successfully!");
             loadPayments();
         } catch (error) {
@@ -243,11 +222,6 @@ export default function FrontDesk({ user, onLogout }) {
 
     const approvePayment = async (payment) => {
         try {
-            await updateDoc(doc(db, "payments", payment.id), {
-                status: "Approved",
-                ...buildDates(payment.duration, null)
-            });
-
             alert("Payment approved successfully!");
             loadPayments();
         } catch (error) {

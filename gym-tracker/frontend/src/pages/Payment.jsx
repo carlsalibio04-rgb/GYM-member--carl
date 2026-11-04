@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
-import { db } from "../lib/firebase.js";
+const API_URL = "https://gym-member-carl.onrender.com/api/payments";
 
 export default function Payment({ user }) {
     const location = useLocation();
@@ -34,17 +33,24 @@ export default function Payment({ user }) {
         try {
             setSubmitting(true);
 
-            await addDoc(collection(db, "payments"), {
-                name: memberName,
-                uid: user.uid,
-                email: user.email,
-                plan: plan.name,
-                amount: plan.price,
-                duration: plan.duration,
-                paymentMethod,
-                status: "Pending",
-                createdAt: serverTimestamp()
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: memberName,
+                    uid: user.uid,
+                    email: user.email,
+                    plan: plan.name,
+                    amount: plan.price,
+                    duration: plan.duration,
+                    paymentMethod
+                })
             });
+
+            if (!response.ok) {
+                const result = await response.json().catch(() => ({}));
+                throw new Error(result.message || "Server error " + response.status);
+            }
 
             alert("Payment submitted successfully!");
             navigate("/member", { replace: true });

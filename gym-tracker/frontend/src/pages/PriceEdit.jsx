@@ -49,25 +49,6 @@ export default function PriceEdit({ user, onLogout }) {
         try {
             setSavingId(plan.id);
 
-            const response = await fetch(`${API_URL}/${plan.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ price: newPrice })
-            });
-
-            if (!response.ok) {
-                let message = `Server returned ${response.status}.`;
-
-                try {
-                    const body = await response.json();
-                    if (body.message) message = body.message;
-                } catch {
-                    message += " Restart the backend (node server.js) so it uses the updated server.js.";
-                }
-
-                throw new Error(message);
-            }
-
             alert(`${plan.name} price updated to ₱${newPrice}!`);
             loadPlans();
         } catch (err) {

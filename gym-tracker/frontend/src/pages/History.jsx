@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    collection,
-    getDocs,
-    query,
-    where
-} from "firebase/firestore";
 
-import { db } from "../lib/firebase.js";
+const API_URL = "https://gym-member-carl.onrender.com/api/payments";
 
 export default function PaymentHistory({ user, onLogout }) {
     const navigate = useNavigate();
@@ -21,24 +15,20 @@ export default function PaymentHistory({ user, onLogout }) {
             try {
                 setLoading(true);
 
-                const q = query(
-                    collection(db, "payments"),
-                    where("uid", "==", user.uid)
-                );
+                const response = await fetch(API_URL);
 
-                const snapshot = await getDocs(q);
-                const data = snapshot.docs.map((document) => ({
-                    id: document.id,
-                    ...document.data()
-                }));
+                if (!response.ok) {
+                    throw new Error("Server error " + response.status);
+                }
 
-                data.sort((a, b) => {
-                    const aTime = a.createdAt?.toMillis?.() || 0;
-                    const bTime = b.createdAt?.toMillis?.() || 0;
-                    return bTime - aTime;
-                });
+                const data = await response.json();
 
-                setPayments(data);
+                // only this member's payments, newest first
+                const mine = data
+                    .filter((payment) => payment.uid === user.uid)
+                    .sort((a, b) => Number(b.id) - Number(a.id));
+
+                setPayments(mine);
             } catch (error) {
                 console.error("PAYMENT HISTORY ERROR:", error);
             } finally {
@@ -92,8 +82,8 @@ export default function PaymentHistory({ user, onLogout }) {
                                 {payments.map((payment) => (
                                     <tr key={payment.id}>
                                         <td>
-                                            {payment.createdAt?.toDate?.()
-                                                ? payment.createdAt.toDate().toLocaleDateString()
+                                            {payment.createdAt && !Number.isNaN(new Date(payment.createdAt).getTime())
+                                                ? new Date(payment.createdAt).toLocaleDateString()
                                                 : "—"}
                                         </td>
                                         <td className="fw-semibold">{payment.plan}</td>

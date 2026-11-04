@@ -1,15 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-    collection,
-    getDocs,
-    orderBy,
-    query,
-    doc,
-    updateDoc
-} from "firebase/firestore";
-
-import { db } from "../lib/firebase.js";
+const API_URL = "https://gym-member-carl.onrender.com/api/payments";
 
 const getTimeLeft = (expirationDate, now) => {
     if (!expirationDate) return null;
@@ -50,18 +41,16 @@ export default function AdminDashboard({ user, onLogout }) {
         try {
             setLoading(true);
 
-            const paymentsQuery = query(
-                collection(db, "payments"),
-                orderBy("createdAt", "desc")
-            );
+            const response = await fetch(API_URL);
 
-            const snapshot = await getDocs(paymentsQuery);
-            setPayments(
-                snapshot.docs.map((document) => ({
-                    id: document.id,
-                    ...document.data()
-                }))
-            );
+            if (!response.ok) {
+                throw new Error("Server error " + response.status);
+            }
+
+            const data = await response.json();
+
+            // newest first
+            setPayments([...data].sort((a, b) => Number(b.id) - Number(a.id)));
         } catch (error) {
             console.error("Failed to load payments:", error);
             alert("Unable to load payment records: " + error.message);
@@ -82,11 +71,20 @@ export default function AdminDashboard({ user, onLogout }) {
 
             expirationDate.setDate(expirationDate.getDate() + days);
 
-            await updateDoc(doc(db, "payments", payment.id), {
-                status: "Approved",
-                startDate: startDate.toISOString(),
-                expirationDate: expirationDate.toISOString()
+            const response = await fetch(`${API_URL}/${payment.id}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    status: "Approved",
+                    startDate: startDate.toISOString(),
+                    expirationDate: expirationDate.toISOString()
+                })
             });
+
+            if (!response.ok) {
+                const result = await response.json().catch(() => ({}));
+                throw new Error(result.message || "Server error " + response.status);
+            }
 
             alert("Payment approved successfully!");
             loadPayments();
