@@ -24,16 +24,13 @@ export default function Payment({ user }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-      alert("Submit button is working!");
-
+      
         if (!memberName.trim()) {
-            alert("Please enter your full name.");
-            return;
+                        return;
         }
 
         if (!user?.uid || !user?.email) {
-            alert("Please log in again.");
-            return;
+                        return;
         }
 
         try {
@@ -42,8 +39,7 @@ export default function Payment({ user }) {
             const durationDays = parseInt(plan.duration, 10);
 
             if (!Number.isInteger(durationDays) || durationDays <= 0) {
-                alert("Invalid membership duration.");
-                return;
+                                return;
             }
 
             const response = await fetch(
@@ -72,14 +68,12 @@ export default function Payment({ user }) {
                 throw new Error(data.message || "Payment submission failed.");
             }
 
-            alert("Payment submitted successfully! Please wait for Front Desk approval.");
-
+            
             navigate("/member", { replace: true });
 
         } catch (error) {
             console.error("Payment Error:", error);
-            alert(error.message || "Cannot connect to the server.");
-        } finally {
+                    } finally {
             setSubmitting(false);
         }
     };
