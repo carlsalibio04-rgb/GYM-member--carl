@@ -1,16 +1,19 @@
+
 import { useEffect, useState } from "react";
 
-const PLANS_URL = "https://gym-member-carl.onrender.com/api/plans";
-const API_URL = "https://gym-member-carl.onrender.com/api/payments";
+const PLANS_URL = "http://localhost:8080/api/plans";
+const API_URL = "http://localhost:8080/api/payments";
 
 const emptyForm = {
-    name: "poko",
-    email: "poko@gmail.com",
-    plan: "weekly",
-    amount: "100",
-    duration: "30Days",
+    uid: "",
+    name: "",
+    email: "",
+    plan: "",
+    amount: "",
+    duration: "",
+    additionalDays: "0",
     paymentMethod: "Cash",
-    status: "Approved"
+    status: "Pending"
 };
 
 const getTimeLeft = (expirationDate, now) => {
@@ -37,22 +40,7 @@ const getTimeLeft = (expirationDate, now) => {
     };
 };
 
-const buildDates = (duration, startISO) => {
-    const days = parseInt(duration, 10);
-
-    if (Number.isNaN(days)) return {};
-
-    const startDate = startISO ? new Date(startISO) : new Date();
-    const expirationDate = new Date(startDate);
-    expirationDate.setDate(expirationDate.getDate() + days);
-
-    return {
-        startDate: startDate.toISOString(),
-        expirationDate: expirationDate.toISOString()
-    };
-};
-
-export default function FrontDesk({ user, onLogout }) {
+export default function FrontDesk({ user }) {
     const [payments, setPayments] = useState([]);
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -77,10 +65,12 @@ export default function FrontDesk({ user, onLogout }) {
 
             const data = await response.json();
 
-            // newest first
-            setPayments([...data].sort((a, b) => Number(b.id) - Number(a.id)));
+            setPayments(
+                [...data].sort((a, b) => Number(b.id) - Number(a.id))
+            );
         } catch (error) {
             console.error("Failed to load payments:", error);
+            alert("Hindi ma-load ang payment records.");
         } finally {
             setLoading(false);
         }
@@ -91,12 +81,12 @@ export default function FrontDesk({ user, onLogout }) {
             const response = await fetch(PLANS_URL);
 
             if (!response.ok) {
-                throw new Error("Failed to load membership plans.");
+                throw new Error("Failed to load plans.");
             }
 
             setPlans(await response.json());
         } catch (error) {
-            console.error("PLAN ERROR:", error);
+            console.error("Plan error:", error);
         }
     };
 
@@ -110,28 +100,61 @@ export default function FrontDesk({ user, onLogout }) {
         return () => clearInterval(timer);
     }, []);
 
-    // ==========================================
-    // POST - add a walk-in payment
-    // ==========================================
+    const getBaseDays = (planName) => {
+        const selected = plans.find(
+            (plan) => plan.name.toLowerCase() === planName.toLowerCase()
+        );
+
+        if (selected) {
+            return parseInt(selected.duration, 10) || 0;
+        }
+
+        return 0;
+    };
+
+    const getTotalDays = () => {
+        const baseDays = parseInt(form.duration, 10) || 0;
+        const extraDays = parseInt(form.additionalDays, 10) || 0;
+
+        return baseDays + extraDays;
+    };
+
     const openAdd = () => {
-        setForm(emptyForm);
+        setForm({
+            ...emptyForm,
+            name: "",
+            email: "",
+            plan: plans[0]?.name || "",
+            amount: plans[0]?.price?.toString() || "",
+            duration: plans[0]?.duration || ""
+        });
+
         setEditing(null);
         setModalMode("add");
     };
 
-    // ==========================================
-    // PUT - edit a payment record
-    // ==========================================
     const openEdit = (payment) => {
+        const totalDays = Number(
+            payment.durationDays || parseInt(payment.duration, 10) || 0
+        );
+
+        const baseDays = getBaseDays(payment.plan);
+        const extraDays = Math.max(0, totalDays - baseDays);
+
         setForm({
+            uid: payment.uid || "",
             name: payment.name || "",
             email: payment.email || "",
             plan: payment.plan || "",
             amount: payment.amount ?? "",
-            duration: payment.duration || "",
+            duration: baseDays > 0
+                ? `${baseDays} Days`
+                : `${totalDays} Days`,
+            additionalDays: extraDays.toString(),
             paymentMethod: payment.paymentMethod || "Cash",
             status: payment.status || "Pending"
         });
+
         setEditing(payment);
         setModalMode("edit");
     };
@@ -139,83 +162,147 @@ export default function FrontDesk({ user, onLogout }) {
     const closeModal = () => {
         setModalMode(null);
         setEditing(null);
+        setForm(emptyForm);
     };
 
     const handlePlanChange = (planName) => {
-        const selected = plans.find((plan) => plan.name === planName);
+        const selected = plans.find(
+            (plan) => plan.name === planName
+        );
 
-        setForm({
-            ...form,
+        setForm((previous) => ({
+            ...previous,
             plan: planName,
-            amount: selected ? selected.price : form.amount,
-            duration: selected ? selected.duration : form.duration
-        });
+            amount: selected ? selected.price.toString() : previous.amount,
+            duration: selected ? selected.duration : previous.duration
+        }));
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
 
-        if (!form.name.trim()) {
+        if (!form.uid.trim()) {
+            alert("Kailangan ang Member UID. Hindi maaaring iwanang blanko.");
             return;
         }
 
-        if (!form.plan || !Number(form.amount) || Number(form.amount) <= 0) {
+        if (!form.name.trim() || !form.email.trim() || !form.plan) {
+            alert("Pakikumpleto ang member details at plan.");
+            return;
+        }
+
+        const amount = Number(form.amount);
+        const totalDays = getTotalDays();
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+            alert("Invalid payment amount.");
+            return;
+        }
+
+        if (!Number.isInteger(totalDays) || totalDays <= 0) {
+            alert("Invalid membership duration.");
             return;
         }
 
         const data = {
+            uid: form.uid.trim(),
             name: form.name.trim(),
             email: form.email.trim(),
             plan: form.plan,
-            amount: Number(form.amount),
-            duration: form.duration,
+            amount,
+            durationDays: totalDays,
+            duration: `${totalDays} Days`,
             paymentMethod: form.paymentMethod,
             status: form.status
         };
 
-        if (form.status === "Approved") {
-            Object.assign(data, buildDates(form.duration, editing?.startDate));
-        } else if (modalMode === "edit") {
-            data.startDate = null;
-            data.expirationDate = null;
-        }
-
         try {
             setSaving(true);
 
-            if (modalMode === "add") {
-            } else {
+            const url = modalMode === "add"
+                ? API_URL
+                : `${API_URL}/${editing.id}`;
+
+            const response = await fetch(url, {
+                method: modalMode === "add" ? "POST" : "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Failed to save payment.");
             }
 
+            alert(
+                `Payment saved! Total membership duration: ${totalDays} days.`
+            );
+
             closeModal();
-            loadPayments();
+            await loadPayments();
         } catch (error) {
             console.error("Save error:", error);
+            alert(error.message);
         } finally {
             setSaving(false);
         }
     };
 
-    // ==========================================
-    // DELETE - remove a payment record
-    // ==========================================
     const deletePayment = async (payment) => {
         if (!window.confirm(`Delete the payment record of ${payment.name}?`)) {
             return;
         }
 
         try {
-            loadPayments();
+            const response = await fetch(`${API_URL}/${payment.id}`, {
+                method: "DELETE"
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Delete failed.");
+            }
+
+            alert("Payment deleted.");
+            await loadPayments();
         } catch (error) {
             console.error("Delete error:", error);
+            alert(error.message);
         }
     };
 
     const approvePayment = async (payment) => {
+        if (!window.confirm(`Approve payment of ${payment.name}?`)) {
+            return;
+        }
+
         try {
-            loadPayments();
+            const response = await fetch(
+                `${API_URL}/${payment.id}/status`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ status: "Approved" })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Approval failed.");
+            }
+
+            alert("Payment approved successfully!");
+            await loadPayments();
         } catch (error) {
             console.error("Approval error:", error);
+            alert(error.message);
         }
     };
 
@@ -255,7 +342,9 @@ export default function FrontDesk({ user, onLogout }) {
             <main className="container py-4 py-lg-5">
                 <div className="mb-4">
                     <h1 className="fw-bold mb-1">Front Desk</h1>
-                    <p className="text-secondary mb-0">Signed in as {user?.email}</p>
+                    <p className="text-secondary mb-0">
+                        Signed in as {user?.email}
+                    </p>
                 </div>
 
                 <div className="row g-4 mb-5">
@@ -263,23 +352,33 @@ export default function FrontDesk({ user, onLogout }) {
                         <div className="card border-0 shadow-sm h-100">
                             <div className="card-body">
                                 <span className="text-secondary small">PENDING</span>
-                                <div className="display-6 fw-bold text-danger mt-2">{pendingCount}</div>
+                                <div className="display-6 fw-bold text-danger mt-2">
+                                    {pendingCount}
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div className="col-md-4">
                         <div className="card border-0 shadow-sm h-100">
                             <div className="card-body">
                                 <span className="text-secondary small">APPROVED</span>
-                                <div className="display-6 fw-bold text-success mt-2">{approvedCount}</div>
+                                <div className="display-6 fw-bold text-success mt-2">
+                                    {approvedCount}
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div className="col-md-4">
                         <div className="card border-0 shadow-sm h-100">
                             <div className="card-body">
-                                <span className="text-secondary small">EXPIRED MEMBERSHIPS</span>
-                                <div className="display-6 fw-bold mt-2">{expiredCount}</div>
+                                <span className="text-secondary small">
+                                    EXPIRED MEMBERSHIPS
+                                </span>
+                                <div className="display-6 fw-bold mt-2">
+                                    {expiredCount}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -290,6 +389,7 @@ export default function FrontDesk({ user, onLogout }) {
                         <span className="text-danger fw-bold small">MANAGEMENT</span>
                         <h2 className="h3 fw-bold mt-1 mb-0">Payment Records</h2>
                     </div>
+
                     <div className="d-flex flex-wrap gap-2">
                         <input
                             className="form-control w-auto"
@@ -298,6 +398,7 @@ export default function FrontDesk({ user, onLogout }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
+
                         <select
                             className="form-select w-auto"
                             value={statusFilter}
@@ -308,6 +409,7 @@ export default function FrontDesk({ user, onLogout }) {
                             <option value="Approved">Approved</option>
                             <option value="Expired">Expired</option>
                         </select>
+
                         <button className="btn btn-danger" onClick={openAdd}>
                             + Add Payment
                         </button>
@@ -316,11 +418,15 @@ export default function FrontDesk({ user, onLogout }) {
 
                 {loading ? (
                     <div className="text-center py-5">
-                        <div className="spinner-border text-danger" role="status" />
-                        <p className="text-secondary mt-3">Loading payment records...</p>
+                        <div className="spinner-border text-danger" />
+                        <p className="text-secondary mt-3">
+                            Loading payment records...
+                        </p>
                     </div>
                 ) : filteredPayments.length === 0 ? (
-                    <div className="alert alert-secondary">No payment records found.</div>
+                    <div className="alert alert-secondary">
+                        No payment records found.
+                    </div>
                 ) : (
                     <div className="table-responsive bg-white rounded shadow-sm">
                         <table className="table table-hover align-middle mb-0">
@@ -328,6 +434,7 @@ export default function FrontDesk({ user, onLogout }) {
                                 <tr>
                                     <th>Member</th>
                                     <th>Plan</th>
+                                    <th>Days</th>
                                     <th>Amount</th>
                                     <th>Method</th>
                                     <th>Status</th>
@@ -336,6 +443,7 @@ export default function FrontDesk({ user, onLogout }) {
                                     <th>Action</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 {filteredPayments.map((payment) => {
                                     const timeLeft =
@@ -347,13 +455,20 @@ export default function FrontDesk({ user, onLogout }) {
                                         <tr key={payment.id}>
                                             <td>
                                                 <strong>{payment.name}</strong>
-                                                <small className="d-block text-secondary">{payment.email || "—"}</small>
+                                                <small className="d-block text-secondary">
+                                                    {payment.email || "—"}
+                                                </small>
                                             </td>
                                             <td>{payment.plan}</td>
+                                            <td>{payment.durationDays || "—"} days</td>
                                             <td>₱{payment.amount}</td>
                                             <td>{payment.paymentMethod || "—"}</td>
                                             <td>
-                                                <span className={`badge ${payment.status === "Approved" ? "text-bg-success" : "text-bg-warning"}`}>
+                                                <span className={`badge ${
+                                                    payment.status === "Approved"
+                                                        ? "text-bg-success"
+                                                        : "text-bg-warning"
+                                                }`}>
                                                     {payment.status}
                                                 </span>
                                             </td>
@@ -364,20 +479,16 @@ export default function FrontDesk({ user, onLogout }) {
                                             </td>
                                             <td>
                                                 {timeLeft ? (
-                                                    <span
-                                                        className={`badge font-monospace ${
-                                                            timeLeft.expired
-                                                                ? "text-bg-danger"
-                                                                : timeLeft.urgent
-                                                                    ? "text-bg-warning"
-                                                                    : "text-bg-success"
-                                                        }`}
-                                                    >
+                                                    <span className={`badge font-monospace ${
+                                                        timeLeft.expired
+                                                            ? "text-bg-danger"
+                                                            : timeLeft.urgent
+                                                                ? "text-bg-warning"
+                                                                : "text-bg-success"
+                                                    }`}>
                                                         {timeLeft.text}
                                                     </span>
-                                                ) : (
-                                                    "—"
-                                                )}
+                                                ) : "—"}
                                             </td>
                                             <td>
                                                 <div className="d-flex flex-wrap gap-1">
@@ -389,12 +500,14 @@ export default function FrontDesk({ user, onLogout }) {
                                                             Approve
                                                         </button>
                                                     )}
+
                                                     <button
                                                         className="btn btn-sm btn-outline-dark"
                                                         onClick={() => openEdit(payment)}
                                                     >
                                                         Edit
                                                     </button>
+
                                                     <button
                                                         className="btn btn-sm btn-outline-danger"
                                                         onClick={() => deletePayment(payment)}
@@ -422,6 +535,7 @@ export default function FrontDesk({ user, onLogout }) {
                                         <h5 className="modal-title fw-bold">
                                             {modalMode === "add" ? "Add Payment" : "Edit Payment"}
                                         </h5>
+
                                         <button
                                             type="button"
                                             className="btn-close btn-close-white"
@@ -431,94 +545,159 @@ export default function FrontDesk({ user, onLogout }) {
 
                                     <div className="modal-body p-4">
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">Member Name</label>
+                                            <label className="form-label fw-semibold">
+                                                Member UID
+                                            </label>
                                             <input
                                                 className="form-control"
-                                                type="text"
+                                                value={form.uid}
+                                                onChange={(e) =>
+                                                    setForm({ ...form, uid: e.target.value })
+                                                }
+                                                placeholder="Enter member Firebase UID"
+                                                required
+                                            />
+                                            <small className="text-secondary">
+                                                Kailangan ang UID para maiugnay ang membership sa account.
+                                            </small>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Member Name
+                                            </label>
+                                            <input
+                                                className="form-control"
                                                 value={form.name}
-                                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                                onChange={(e) =>
+                                                    setForm({ ...form, name: e.target.value })
+                                                }
+                                                required
                                             />
                                         </div>
 
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">Email</label>
+                                            <label className="form-label fw-semibold">
+                                                Email
+                                            </label>
                                             <input
                                                 className="form-control"
                                                 type="email"
                                                 value={form.email}
-                                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                                onChange={(e) =>
+                                                    setForm({ ...form, email: e.target.value })
+                                                }
+                                                required
                                             />
                                         </div>
 
                                         <div className="row g-3 mb-3">
                                             <div className="col-md-6">
-                                                <label className="form-label fw-semibold">Plan</label>
-                                                {plans.length > 0 ? (
-                                                    <select
-                                                        className="form-select"
-                                                        value={form.plan}
-                                                        onChange={(e) => handlePlanChange(e.target.value)}
-                                                    >
-                                                        <option value="">Select plan</option>
-                                                        {plans.map((plan) => (
-                                                            <option key={plan.id} value={plan.name}>
-                                                                {plan.name}
-                                                            </option>
-                                                        ))}
-                                                        {form.plan && !plans.some((plan) => plan.name === form.plan) && (
-                                                            <option value={form.plan}>{form.plan}</option>
-                                                        )}
-                                                    </select>
-                                                ) : (
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        placeholder="e.g. Monthly"
-                                                        value={form.plan}
-                                                        onChange={(e) => setForm({ ...form, plan: e.target.value })}
-                                                    />
-                                                )}
+                                                <label className="form-label fw-semibold">
+                                                    Plan
+                                                </label>
+
+                                                <select
+                                                    className="form-select"
+                                                    value={form.plan}
+                                                    onChange={(e) =>
+                                                        handlePlanChange(e.target.value)
+                                                    }
+                                                    required
+                                                >
+                                                    <option value="">Select plan</option>
+                                                    {plans.map((plan) => (
+                                                        <option key={plan.id} value={plan.name}>
+                                                            {plan.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
                                             </div>
+
                                             <div className="col-md-6">
-                                                <label className="form-label fw-semibold">Duration</label>
+                                                <label className="form-label fw-semibold">
+                                                    Base Duration
+                                                </label>
                                                 <input
                                                     className="form-control"
-                                                    type="text"
-                                                    placeholder="e.g. 30 Days"
                                                     value={form.duration}
-                                                    onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                                                    readOnly
                                                 />
                                             </div>
                                         </div>
 
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Additional Days
+                                            </label>
+                                            <input
+                                                className="form-control"
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={form.additionalDays}
+                                                onChange={(e) =>
+                                                    setForm({
+                                                        ...form,
+                                                        additionalDays: e.target.value
+                                                    })
+                                                }
+                                            />
+                                            <small className="text-secondary">
+                                                Dagdag na araw sa napiling membership plan.
+                                            </small>
+                                        </div>
+
+                                        <div className="alert alert-info">
+                                            **Total Membership: {getTotalDays()} Days**
+                                        </div>
+
                                         <div className="row g-3">
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold">Amount</label>
+                                                <label className="form-label fw-semibold">
+                                                    Amount
+                                                </label>
                                                 <input
                                                     className="form-control"
                                                     type="number"
                                                     min="1"
                                                     value={form.amount}
-                                                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                                                    onChange={(e) =>
+                                                        setForm({ ...form, amount: e.target.value })
+                                                    }
+                                                    required
                                                 />
                                             </div>
+
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold">Method</label>
+                                                <label className="form-label fw-semibold">
+                                                    Method
+                                                </label>
                                                 <select
                                                     className="form-select"
                                                     value={form.paymentMethod}
-                                                    onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+                                                    onChange={(e) =>
+                                                        setForm({
+                                                            ...form,
+                                                            paymentMethod: e.target.value
+                                                        })
+                                                    }
                                                 >
                                                     <option value="Cash">Cash</option>
                                                     <option value="GCash">GCash</option>
                                                 </select>
                                             </div>
+
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold">Status</label>
+                                                <label className="form-label fw-semibold">
+                                                    Status
+                                                </label>
                                                 <select
                                                     className="form-select"
                                                     value={form.status}
-                                                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                                                    onChange={(e) =>
+                                                        setForm({ ...form, status: e.target.value })
+                                                    }
                                                 >
                                                     <option value="Pending">Pending</option>
                                                     <option value="Approved">Approved</option>
@@ -528,10 +707,19 @@ export default function FrontDesk({ user, onLogout }) {
                                     </div>
 
                                     <div className="modal-footer">
-                                        <button type="button" className="btn btn-outline-secondary" onClick={closeModal}>
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary"
+                                            onClick={closeModal}
+                                        >
                                             Cancel
                                         </button>
-                                        <button type="submit" className="btn btn-danger" disabled={saving}>
+
+                                        <button
+                                            type="submit"
+                                            className="btn btn-danger"
+                                            disabled={saving}
+                                        >
                                             {saving ? "Saving..." : "Save"}
                                         </button>
                                     </div>
@@ -539,6 +727,7 @@ export default function FrontDesk({ user, onLogout }) {
                             </div>
                         </div>
                     </div>
+
                     <div className="modal-backdrop show" />
                 </>
             )}

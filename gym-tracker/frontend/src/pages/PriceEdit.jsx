@@ -9,25 +9,32 @@ export default function PriceEdit({ user, onLogout }) {
     const [savingId, setSavingId] = useState(null);
     const [error, setError] = useState("");
 
+    // LOAD MEMBERSHIP PLANS
     const loadPlans = async () => {
         try {
             setLoading(true);
             setError("");
 
             const response = await fetch(API_URL);
+            const data = await response.json();
 
             if (!response.ok) {
-                throw new Error("Failed to load membership plans.");
+                throw new Error(data.message || "Failed to load plans.");
             }
 
-            const data = await response.json();
             setPlans(data);
-            setPrices(
-                Object.fromEntries(data.map((plan) => [plan.id, plan.price]))
-            );
+
+            const priceData = {};
+
+            data.forEach((plan) => {
+                priceData[plan.id] = plan.price;
+            });
+
+            setPrices(priceData);
+
         } catch (err) {
-            console.error("PLAN ERROR:", err);
-            setError("Unable to load membership plans. Make sure the backend server is running.");
+            console.error("LOAD PLANS ERROR:", err);
+            setError("Unable to load membership plans.");
         } finally {
             setLoading(false);
         }
@@ -37,103 +44,147 @@ export default function PriceEdit({ user, onLogout }) {
         loadPlans();
     }, []);
 
+    // HANDLE PRICE INPUT
+    const handlePriceChange = (id, value) => {
+        setPrices((prev) => ({
+            ...prev,
+            [id]: value,
+        }));
+    };
+
+    // SAVE UPDATED PRICE
     const savePrice = async (plan) => {
         const newPrice = Number(prices[plan.id]);
 
-        if (!newPrice || newPrice <= 0) {
+        if (!Number.isFinite(newPrice) || newPrice <= 0) {
+            setError("Please enter a valid price.");
             return;
         }
 
         try {
             setSavingId(plan.id);
+            setError("");
 
-            loadPlans();
+            const response = await fetch(`${API_URL}/${plan.id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    price: newPrice,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to update price.");
+            }
+
+            await loadPlans();
+
+            alert("Membership price updated successfully!");
+
         } catch (err) {
-            console.error("Price update error:", err);
+            console.error("PRICE UPDATE ERROR:", err);
+            setError(err.message || "Unable to update price.");
         } finally {
             setSavingId(null);
         }
     };
 
     return (
-        <div className="bg-light min-vh-100">
-            <main className="container py-4 py-lg-5">
-                <div className="mb-4">
-                    <h1 className="fw-bold mb-1">Price Edit</h1>
-                    <p className="text-secondary mb-0">Signed in as {user?.email}</p>
+        <div className="container py-4">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 className="fw-bold">Membership Price Management</h2>
+                    <p className="text-muted mb-0">
+                        Update the prices of your membership plans.
+                    </p>
                 </div>
 
-                <div className="mb-3">
-                    <span className="text-danger fw-bold small">MANAGEMENT</span>
-                    <h2 className="h3 fw-bold mt-1 mb-0">Membership Plan Prices</h2>
+                {onLogout && (
+                    <button
+                        className="btn btn-outline-danger"
+                        onClick={onLogout}
+                    >
+                        Logout
+                    </button>
+                )}
+            </div>
+
+            {error && (
+                <div className="alert alert-danger">
+                    {error}
                 </div>
+            )}
 
-                {loading && (
-                    <div className="text-center py-5">
-                        <div className="spinner-border text-danger" role="status" />
-                        <p className="text-secondary mt-3">Loading membership plans...</p>
+            {loading ? (
+                <div className="text-center py-5">
+                    <div className="spinner-border" role="status">
+                        <span className="visually-hidden">Loading...</span>
                     </div>
-                )}
+                    <p className="mt-2">Loading membership plans...</p>
+                </div>
+            ) : plans.length === 0 ? (
+                <div className="alert alert-warning">
+                    No membership plans found.
+                </div>
+            ) : (
+                <div className="row g-3">
+                    {plans.map((plan) => (
+                        <div className="col-md-6 col-lg-4" key={plan.id}>
+                            <div className="card shadow-sm h-100">
+                                <div className="card-body">
+                                    <h4 className="fw-bold">
+                                        {plan.name}
+                                    </h4>
 
-                {!loading && error && (
-                    <div className="alert alert-warning">{error}</div>
-                )}
+                                    <p className="text-muted">
+                                        Duration: {plan.duration}
+                                    </p>
 
-                {!loading && !error && plans.length === 0 && (
-                    <div className="alert alert-secondary">No membership plans found.</div>
-                )}
+                                    <label className="form-label fw-semibold">
+                                        Membership Price (₱)
+                                    </label>
 
-                {!loading && !error && plans.length > 0 && (
-                    <div className="table-responsive bg-white rounded shadow-sm">
-                        <table className="table table-hover align-middle mb-0">
-                            <thead className="table-dark">
-                                <tr>
-                                    <th>Plan</th>
-                                    <th>Duration</th>
-                                    <th>Current Price</th>
-                                    <th>New Price</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {plans.map((plan) => (
-                                    <tr key={plan.id}>
-                                        <td><strong>{plan.name}</strong></td>
-                                        <td>{plan.duration}</td>
-                                        <td className="text-danger fw-bold">₱{plan.price}</td>
-                                        <td style={{ maxWidth: 180 }}>
-                                            <div className="input-group">
-                                                <span className="input-group-text">₱</span>
-                                                <input
-                                                    className="form-control"
-                                                    type="number"
-                                                    min="1"
-                                                    value={prices[plan.id] ?? ""}
-                                                    onChange={(e) =>
-                                                        setPrices({ ...prices, [plan.id]: e.target.value })
-                                                    }
-                                                />
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn btn-sm btn-danger"
-                                                disabled={
-                                                    savingId === plan.id ||
-                                                    Number(prices[plan.id]) === plan.price
-                                                }
-                                                onClick={() => savePrice(plan)}
-                                            >
-                                                {savingId === plan.id ? "Saving..." : "Save"}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </main>
+                                    <input
+                                        type="number"
+                                        className="form-control mb-3"
+                                        min="1"
+                                        step="0.01"
+                                        value={prices[plan.id] ?? ""}
+                                        onChange={(e) =>
+                                            handlePriceChange(
+                                                plan.id,
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+
+                                    <button
+                                        className="btn btn-primary w-100"
+                                        onClick={() => savePrice(plan)}
+                                        disabled={savingId === plan.id}
+                                    >
+                                        {savingId === plan.id
+                                            ? "Saving..."
+                                            : "Save Price"}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <button
+                className="btn btn-secondary mt-4"
+                onClick={loadPlans}
+                disabled={loading || savingId !== null}
+            >
+                Refresh Plans
+            </button>
         </div>
     );
 }

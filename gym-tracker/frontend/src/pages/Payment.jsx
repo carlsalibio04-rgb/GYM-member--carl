@@ -24,6 +24,7 @@ export default function Payment({ user }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+      alert("Submit button is working!");
 
         if (!memberName.trim()) {
             alert("Please enter your full name.");

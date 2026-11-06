@@ -1,36 +1,55 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = "https://gym-member-carl.onrender.com/api/payments";
 
-export default function PaymentHistory({ user, onLogout }) {
+export default function History({ user, onLogout }) {
     const navigate = useNavigate();
+
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         const loadPayments = async () => {
-            if (!user) return;
+            if (!user?.uid) {
+                setLoading(false);
+                return;
+            }
 
             try {
                 setLoading(true);
+                setError("");
 
                 const response = await fetch(API_URL);
 
                 if (!response.ok) {
-                    throw new Error("Server error " + response.status);
+                    throw new Error(`Server error: ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                // only this member's payments, newest first
-                const mine = data
-                    .filter((payment) => payment.uid === user.uid)
-                    .sort((a, b) => Number(b.id) - Number(a.id));
+                if (!Array.isArray(data)) {
+                    throw new Error("Invalid payment data received.");
+                }
 
-                setPayments(mine);
-            } catch (error) {
-                console.error("PAYMENT HISTORY ERROR:", error);
+                const myPayments = data
+                    .filter(
+                        (payment) =>
+                            String(payment.uid) === String(user.uid)
+                    )
+                    .sort(
+                        (a, b) =>
+                            new Date(b.createdAt || 0).getTime() -
+                            new Date(a.createdAt || 0).getTime()
+                    );
+
+                setPayments(myPayments);
+
+            } catch (err) {
+                console.error("PAYMENT HISTORY ERROR:", err);
+                setError(err.message || "Unable to load payment history.");
             } finally {
                 setLoading(false);
             }
@@ -43,12 +62,22 @@ export default function PaymentHistory({ user, onLogout }) {
         <div className="bg-light min-vh-100">
             <nav className="navbar navbar-dark bg-dark shadow-sm">
                 <div className="container">
-                    <span className="navbar-brand fw-bold">MOMENTUM GYM</span>
+                    <span className="navbar-brand fw-bold">
+                        MOMENTUM GYM
+                    </span>
+
                     <div className="d-flex gap-2">
-                        <button className="btn btn-outline-light btn-sm" onClick={() => navigate("/member")}>
+                        <button
+                            className="btn btn-outline-light btn-sm"
+                            onClick={() => navigate("/member")}
+                        >
                             Back
                         </button>
-                        <button className="btn btn-outline-light btn-sm" onClick={onLogout}>
+
+                        <button
+                            className="btn btn-outline-light btn-sm"
+                            onClick={onLogout}
+                        >
                             Logout
                         </button>
                     </div>
@@ -56,16 +85,31 @@ export default function PaymentHistory({ user, onLogout }) {
             </nav>
 
             <main className="container py-4 py-lg-5">
-                <span className="text-danger fw-bold small">HISTORY</span>
-                <h1 className="fw-bold mt-1 mb-1">My Payment History</h1>
-                <p className="text-secondary mb-4">{user?.email}</p>
+                <span className="text-danger fw-bold small">
+                    HISTORY
+                </span>
+
+                <h1 className="fw-bold mt-1 mb-1">
+                    My Payment History
+                </h1>
+
+                <p className="text-secondary mb-4">
+                    {user?.email}
+                </p>
 
                 {loading ? (
                     <div className="text-center py-5">
-                        <div className="spinner-border text-danger" role="status" />
+                        <div className="spinner-border text-danger" />
+                        <p className="mt-2">Loading payment history...</p>
+                    </div>
+                ) : error ? (
+                    <div className="alert alert-danger">
+                        {error}
                     </div>
                 ) : payments.length === 0 ? (
-                    <div className="alert alert-secondary">No payment records yet.</div>
+                    <div className="alert alert-secondary">
+                        No payment records found for this account.
+                    </div>
                 ) : (
                     <div className="table-responsive bg-white rounded shadow-sm">
                         <table className="table table-hover align-middle mb-0">
@@ -78,20 +122,41 @@ export default function PaymentHistory({ user, onLogout }) {
                                     <th>Status</th>
                                 </tr>
                             </thead>
+
                             <tbody>
-                                {payments.map((payment) => (
-                                    <tr key={payment.id}>
+                                {payments.map((payment, index) => (
+                                    <tr key={payment.id || index}>
                                         <td>
-                                            {payment.createdAt && !Number.isNaN(new Date(payment.createdAt).getTime())
-                                                ? new Date(payment.createdAt).toLocaleDateString()
+                                            {payment.createdAt
+                                                ? new Date(
+                                                    payment.createdAt
+                                                ).toLocaleDateString()
                                                 : "—"}
                                         </td>
-                                        <td className="fw-semibold">{payment.plan}</td>
-                                        <td>{payment.paymentMethod || "—"}</td>
-                                        <td>₱{payment.amount}</td>
+
+                                        <td className="fw-semibold">
+                                            {payment.plan || "—"}
+                                        </td>
+
                                         <td>
-                                            <span className={`badge ${payment.status === "Approved" ? "text-bg-success" : "text-bg-warning"}`}>
-                                                {payment.status}
+                                            {payment.paymentMethod || "—"}
+                                        </td>
+
+                                        <td>
+                                            ₱{payment.amount ?? "—"}
+                                        </td>
+
+                                        <td>
+                                            <span
+                                                className={`badge ${
+                                                    payment.status === "Approved"
+                                                        ? "text-bg-success"
+                                                        : payment.status === "Rejected"
+                                                        ? "text-bg-danger"
+                                                        : "text-bg-warning"
+                                                }`}
+                                            >
+                                                {payment.status || "Unknown"}
                                             </span>
                                         </td>
                                     </tr>
