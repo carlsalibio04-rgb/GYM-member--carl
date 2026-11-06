@@ -27,6 +27,7 @@
 .admin-user-details small { max-width:165px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#9ca3af; font-size:10px; }
 .admin-logout-link { color:#fca5a5; }
 .admin-content { min-height:100vh; margin-left:258px; background:#f8f9fa; }
+.admin-layout { min-height:100vh; }
 .admin-main { max-width:1600px; }
 .admin-mobile-toggle { display:none; }
 .admin-sidebar-backdrop { display:none; }
