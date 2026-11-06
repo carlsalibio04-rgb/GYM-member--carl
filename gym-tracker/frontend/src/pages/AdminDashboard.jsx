@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import "./AdminDashboard.css";
 const API_URL = "https://gym-member-carl.onrender.com/api/payments";
 
@@ -31,7 +31,7 @@ export default function AdminDashboard({ user, onLogout }) {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [now, setNow] = useState(Date.now());
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [searchParams] = useSearchParams();
 
     useEffect(() => {
         const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -40,6 +40,10 @@ export default function AdminDashboard({ user, onLogout }) {
     const [statusFilter, setStatusFilter] = useState("All");
     const [showMembers, setShowMembers] = useState(false);
     const [memberSearch, setMemberSearch] = useState("");
+
+    useEffect(() => {
+        if (searchParams.get("view") === "members") setShowMembers(true);
+    }, [searchParams]);
 
     // Put the members from your SQL here. Each member looks like:
     // { id, name, email, plan, membershipStatus: "Active" | "Expired" | "Pending" }
@@ -113,64 +117,7 @@ export default function AdminDashboard({ user, onLogout }) {
 
     return (
         <div className="bg-light min-vh-100">
-            <button
-                className="admin-mobile-toggle"
-                type="button"
-                aria-label="Toggle navigation"
-                aria-expanded={mobileMenuOpen}
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-                <span></span><span></span><span></span>
-            </button>
-
-            {mobileMenuOpen && (
-                <button
-                    className="admin-sidebar-backdrop"
-                    aria-label="Close navigation"
-                    onClick={() => setMobileMenuOpen(false)}
-                />
-            )}
-
-            <aside className={`admin-sidebar ${mobileMenuOpen ? "is-open" : ""}`}>
-                <div className="admin-sidebar-brand">
-                    <div className="admin-brand-mark">M</div>
-                    <div>
-                        <strong>MOMENTUM</strong>
-                        <small>GYM MANAGEMENT</small>
-                    </div>
-                </div>
-
-                <div className="admin-sidebar-label">MAIN MENU</div>
-                <nav className="admin-sidebar-nav" aria-label="Admin navigation">
-                    <Link className="admin-nav-link active" to="/admin" onClick={() => setMobileMenuOpen(false)}>
-                        <span className="admin-nav-icon">▦</span><span>Dashboard</span>
-                    </Link>
-                    <Link className="admin-nav-link" to="/frontdesk" onClick={() => setMobileMenuOpen(false)}>
-                        <span className="admin-nav-icon">⌂</span><span>Front Desk</span>
-                    </Link>
-                    <button className="admin-nav-link" onClick={() => { setShowMembers(true); setMobileMenuOpen(false); }}>
-                        <span className="admin-nav-icon">♙</span><span>Members</span>
-                    </button>
-                    <Link className="admin-nav-link" to="/priceedit" onClick={() => setMobileMenuOpen(false)}>
-                        <span className="admin-nav-icon">₱</span><span>Price Management</span>
-                    </Link>
-                </nav>
-
-                <div className="admin-sidebar-bottom">
-                    <div className="admin-user-card">
-                        <div className="admin-user-avatar">{(user?.email || "A").charAt(0).toUpperCase()}</div>
-                        <div className="admin-user-details">
-                            <strong>Administrator</strong>
-                            <small title={user?.email}>{user?.email}</small>
-                        </div>
-                    </div>
-                    <button className="admin-logout-link" onClick={onLogout}>
-                        <span className="admin-nav-icon">↪</span><span>Logout</span>
-                    </button>
-                </div>
-            </aside>
-
-            <div className="admin-content">            <main className="admin-main container-fluid py-4 py-lg-5">
+            <main className="admin-main container-fluid py-4 py-lg-5">
                 <div className="mb-4">
                     <h1 className="fw-bold mb-1">Admin Dashboard</h1>
                     <p className="text-secondary mb-0">Signed in as {user?.email}</p>
@@ -292,7 +239,6 @@ export default function AdminDashboard({ user, onLogout }) {
                     </div>
                 )}
             </main>
-            </div>
 
             {showMembers && (
                 <>
