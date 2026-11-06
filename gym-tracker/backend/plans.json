@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "name": "Weekly",
+        "duration": "7 Days",
+        "price": 200
+    },
+    {
+        "id": 2,
+        "name": "Monthly",
+        "duration": "30 Days",
+        "price": 500
+    },
+    {
+        "id": 3,
+        "name": "Yearly",
+        "duration": "365 Days",
+        "price": 5000
+    }
+]

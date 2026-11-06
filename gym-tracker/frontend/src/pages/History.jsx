@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = "https://gym-member-carl.onrender.com/api/payments";
+const API_URL = "http://localhost:8080/api/payments";
 
 export default function History({ user, onLogout }) {
     const navigate = useNavigate();
