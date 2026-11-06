@@ -12,6 +12,7 @@ import Payment from "./pages/Payment.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import FrontDesk from "./pages/FrontDesk.jsx";
 import PriceEdit from "./pages/PriceEdit.jsx";
+import AdminLayout from "./pages/AdminLayout.jsx";
 
 import { auth, db } from "./lib/firebase.js";
 
@@ -168,13 +169,16 @@ export default function App() {
             />
 
             <Route
-                path="/admin"
                 element={
                     <AdminRoute user={user} role={role}>
-                        <AdminDashboard user={user} onLogout={handleLogout} />
+                        <AdminLayout user={user} onLogout={handleLogout} />
                     </AdminRoute>
                 }
-            />
+            >
+                <Route path="/admin" element={<AdminDashboard user={user} />} />
+                <Route path="/frontdesk" element={<FrontDesk user={user} />} />
+                <Route path="/priceedit" element={<PriceEdit user={user} />} />
+            </Route>
 
             <Route
                 path="/history"
@@ -182,24 +186,6 @@ export default function App() {
                     <MemberRoute user={user} role={role}>
                         <History user={user} onLogout={handleLogout} />
                     </MemberRoute>
-                }
-            />
-
-            <Route
-                path="/frontdesk"
-                element={
-                    <AdminRoute user={user} role={role}>
-                        <FrontDesk user={user} onLogout={handleLogout} />
-                    </AdminRoute>
-                }
-            />
-
-            <Route
-                path="/priceedit"
-                element={
-                    <AdminRoute user={user} role={role}>
-                        <PriceEdit user={user} onLogout={handleLogout} />
-                    </AdminRoute>
                 }
             />
 
