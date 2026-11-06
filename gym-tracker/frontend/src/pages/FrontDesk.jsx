@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 const PLANS_URL = "https://gym-member-carl.onrender.com/api/plans";
 const API_URL = "https://gym-member-carl.onrender.com/api/payments";
@@ -253,23 +252,6 @@ export default function FrontDesk({ user, onLogout }) {
 
     return (
         <div className="bg-light min-vh-100">
-            <nav className="navbar navbar-dark bg-dark shadow-sm">
-                <div className="container">
-                    <div>
-                        <span className="navbar-brand fw-bold">MOMENTUM GYM</span>
-                        <span className="badge text-bg-danger ms-2">FRONT DESK</span>
-                    </div>
-                    <div className="d-flex gap-2">
-                        <Link className="btn btn-outline-light btn-sm" to="/admin">
-                            Back
-                        </Link>
-                        <button className="btn btn-outline-light btn-sm" onClick={onLogout}>
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </nav>
-
             <main className="container py-4 py-lg-5">
                 <div className="mb-4">
                     <h1 className="fw-bold mb-1">Front Desk</h1>
