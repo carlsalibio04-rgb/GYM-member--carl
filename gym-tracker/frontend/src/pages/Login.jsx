@@ -36,8 +36,7 @@ export default function Login() {
         e.preventDefault();
 
         if (!email || !password) {
-            alert("Please enter your email and password.");
-            return;
+                        return;
         }
 
         try {
@@ -46,8 +45,7 @@ export default function Login() {
             await goToDashboard(result.user);
         } catch (error) {
             console.error(error);
-            alert("Login failed: " + error.message);
-        } finally {
+                    } finally {
             setLoading(false);
         }
     };
@@ -62,8 +60,7 @@ export default function Login() {
             await goToDashboard(result.user);
         } catch (error) {
             console.error(error);
-            alert("Google login failed: " + error.message);
-        } finally {
+                    } finally {
             setLoading(false);
         }
     };
