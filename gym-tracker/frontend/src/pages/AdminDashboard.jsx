@@ -87,8 +87,7 @@ export default function AdminDashboard({ user, onLogout }) {
 
         } catch (error) {
             console.error("Failed to load members:", error);
-            alert("Failed to load members. Please check Firestore permissions.");
-        } finally {
+                    } finally {
             setMembersLoading(false);
         }
     };
@@ -196,13 +195,7 @@ export default function AdminDashboard({ user, onLogout }) {
     // ==========================================
 
     const approvePayment = async (payment) => {
-        if (!window.confirm(
-            `Approve payment of ${payment.name}?`
-        )) {
-            return;
-        }
-
-        try {
+                try {
             const response = await fetch(
                 `${API_URL}/${payment.id}/status`,
                 {
@@ -224,14 +217,12 @@ export default function AdminDashboard({ user, onLogout }) {
                 );
             }
 
-            alert("Payment approved successfully!");
-
+            
             await loadPayments();
 
         } catch (error) {
             console.error("Approval error:", error);
-            alert(error.message);
-        }
+                    }
     };
 
     // ==========================================
