@@ -42,23 +42,15 @@ export default function PriceEdit({ user, onLogout }) {
         const newPrice = Number(prices[plan.id]);
 
         if (!newPrice || newPrice <= 0) {
-            alert("Please enter a valid price.");
             return;
         }
 
         try {
             setSavingId(plan.id);
 
-            alert(`${plan.name} price updated to ₱${newPrice}!`);
             loadPlans();
         } catch (err) {
             console.error("Price update error:", err);
-
-            if (err instanceof TypeError) {
-                alert("Unable to reach the backend. Make sure it is running on port 8080.");
-            } else {
-                alert("Unable to update price: " + err.message);
-            }
         } finally {
             setSavingId(null);
         }

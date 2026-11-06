@@ -82,7 +82,6 @@ export default function FrontDesk({ user, onLogout }) {
             setPayments([...data].sort((a, b) => Number(b.id) - Number(a.id)));
         } catch (error) {
             console.error("Failed to load payments:", error);
-            alert("Unable to load payment records: " + error.message);
         } finally {
             setLoading(false);
         }
@@ -158,12 +157,10 @@ export default function FrontDesk({ user, onLogout }) {
         e.preventDefault();
 
         if (!form.name.trim()) {
-            alert("Please enter the member name.");
             return;
         }
 
         if (!form.plan || !Number(form.amount) || Number(form.amount) <= 0) {
-            alert("Please choose a plan and enter a valid amount.");
             return;
         }
 
@@ -188,16 +185,13 @@ export default function FrontDesk({ user, onLogout }) {
             setSaving(true);
 
             if (modalMode === "add") {
-                alert("Payment added successfully!");
             } else {
-                alert("Payment updated successfully!");
             }
 
             closeModal();
             loadPayments();
         } catch (error) {
             console.error("Save error:", error);
-            alert("Unable to save payment: " + error.message);
         } finally {
             setSaving(false);
         }
@@ -212,21 +206,17 @@ export default function FrontDesk({ user, onLogout }) {
         }
 
         try {
-            alert("Payment deleted successfully!");
             loadPayments();
         } catch (error) {
             console.error("Delete error:", error);
-            alert("Unable to delete payment: " + error.message);
         }
     };
 
     const approvePayment = async (payment) => {
         try {
-            alert("Payment approved successfully!");
             loadPayments();
         } catch (error) {
             console.error("Approval error:", error);
-            alert("Unable to approve payment: " + error.message);
         }
     };
 

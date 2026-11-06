@@ -36,6 +36,22 @@ export default function AdminDashboard({ user, onLogout }) {
         return () => clearInterval(timer);
     }, []);
     const [statusFilter, setStatusFilter] = useState("All");
+    const [showMembers, setShowMembers] = useState(false);
+    const [memberSearch, setMemberSearch] = useState("");
+
+    // Put the members from your SQL here. Each member looks like:
+    // { id, name, email, plan, membershipStatus: "Active" | "Expired" | "Pending" }
+    const members = [];
+
+    const filteredMembers = members.filter((member) => {
+        const keyword = memberSearch.trim().toLowerCase();
+
+        return (
+            !keyword ||
+            (member.name || "").toLowerCase().includes(keyword) ||
+            (member.email || "").toLowerCase().includes(keyword)
+        );
+    });
 
     const loadPayments = async () => {
         try {
@@ -53,7 +69,6 @@ export default function AdminDashboard({ user, onLogout }) {
             setPayments([...data].sort((a, b) => Number(b.id) - Number(a.id)));
         } catch (error) {
             console.error("Failed to load payments:", error);
-            alert("Unable to load payment records: " + error.message);
         } finally {
             setLoading(false);
         }
@@ -71,26 +86,9 @@ export default function AdminDashboard({ user, onLogout }) {
 
             expirationDate.setDate(expirationDate.getDate() + days);
 
-            const response = await fetch(`${API_URL}/${payment.id}/status`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    status: "Approved",
-                    startDate: startDate.toISOString(),
-                    expirationDate: expirationDate.toISOString()
-                })
-            });
-
-            if (!response.ok) {
-                const result = await response.json().catch(() => ({}));
-                throw new Error(result.message || "Server error " + response.status);
-            }
-
-            alert("Payment approved successfully!");
             loadPayments();
         } catch (error) {
             console.error("Approval error:", error);
-            alert("Unable to approve payment: " + error.message);
         }
     };
 
@@ -123,6 +121,9 @@ export default function AdminDashboard({ user, onLogout }) {
                         <Link className="btn btn-outline-light btn-sm" to="/frontdesk">
                             Front Desk
                         </Link>
+                        <button className="btn btn-outline-light btn-sm" onClick={() => setShowMembers(true)}>
+                            Members
+                        </button>
                         <Link className="btn btn-outline-light btn-sm" to="/priceedit">
                             Price Edit
                         </Link>
@@ -255,6 +256,78 @@ export default function AdminDashboard({ user, onLogout }) {
                     </div>
                 )}
             </main>
+
+            {showMembers && (
+                <>
+                    <div className="modal d-block" tabIndex="-1" role="dialog">
+                        <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                            <div className="modal-content border-0 shadow">
+                                <div className="modal-header bg-dark text-white">
+                                    <h5 className="modal-title fw-bold">Members</h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close btn-close-white"
+                                        onClick={() => setShowMembers(false)}
+                                    />
+                                </div>
+
+                                <div className="modal-body p-4">
+                                    <input
+                                        className="form-control mb-3"
+                                        type="text"
+                                        placeholder="Search name or email"
+                                        value={memberSearch}
+                                        onChange={(e) => setMemberSearch(e.target.value)}
+                                    />
+
+                                    {filteredMembers.length === 0 ? (
+                                        <div className="alert alert-secondary mb-0">No members found.</div>
+                                    ) : (
+                                        <div className="table-responsive">
+                                            <table className="table table-hover align-middle mb-0">
+                                                <thead className="table-dark">
+                                                    <tr>
+                                                        <th>Member</th>
+                                                        <th>Plan</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {filteredMembers.map((member) => (
+                                                        <tr key={member.id}>
+                                                            <td>
+                                                                <strong>{member.name}</strong>
+                                                                <small className="d-block text-secondary">{member.email || "—"}</small>
+                                                            </td>
+                                                            <td>{member.plan || "—"}</td>
+                                                            <td>
+                                                                <span className={`badge ${member.membershipStatus === "Active" ? "text-bg-success" : member.membershipStatus === "Expired" ? "text-bg-danger" : "text-bg-warning"}`}>
+                                                                    {member.membershipStatus}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowMembers(false)}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-backdrop show" />
+                </>
+            )}
         </div>
     );
 }
