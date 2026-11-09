@@ -3,7 +3,7 @@
         "id": 1,
         "name": "Weekly",
         "duration": "7 Days",
-        "price": 200
+        "price": 200.01
     },
     {
         "id": 2,
