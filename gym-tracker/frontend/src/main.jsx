@@ -8,6 +8,12 @@ import "./index.css";
 
 import App from "./App.jsx";
 
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    });
+}
+
 createRoot(document.getElementById("root")).render(
     <StrictMode>
         <BrowserRouter>
