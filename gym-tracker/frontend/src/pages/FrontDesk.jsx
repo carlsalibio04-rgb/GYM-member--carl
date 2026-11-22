@@ -1,8 +1,9 @@
 
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../lib/api.js";
 
-const PLANS_URL = "http://localhost:8080/api/plans";
-const API_URL = "http://localhost:8080/api/payments";
+const PLANS_URL = `${API_BASE_URL}/api/plans`;
+const API_URL = `${API_BASE_URL}/api/payments`;
 
 const emptyForm = {
     uid: "",
