@@ -32,14 +32,13 @@ const db = mysql.createPool({
 async function testConnection() {
     try {
         const connection = await db.getConnection();
-
         console.log("MySQL Database Connected!");
-
         connection.release();
     } catch (error) {
         console.error("Database Connection Failed:", error);
     }
 }
+
 testConnection();
 
 // ==========================================
