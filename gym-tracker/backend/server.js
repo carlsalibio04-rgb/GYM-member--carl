@@ -13,16 +13,20 @@ app.use(express.json());
 
 
 // MYSQL DATABASE CONNECTION
-const db = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: Number(process.env.DB_PORT || 4000),
+// Local XAMPP defaults are used when Render DB environment variables are absent.
+// Render keeps using its configured DB_HOST / DB_PORT / credentials and TLS.
+const isRemoteDatabase = Boolean(process.env.DB_HOST);
 
-    ssl: {
-        minVersion: "TLSv1.2"
-    },
+const db = mysql.createPool({
+    host: process.env.DB_HOST || "127.0.0.1",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "gym_membership",
+    port: Number(process.env.DB_PORT || 3306),
+
+    ...(isRemoteDatabase
+        ? { ssl: { minVersion: "TLSv1.2" } }
+        : {}),
 
     waitForConnections: true,
     connectionLimit: 10,
