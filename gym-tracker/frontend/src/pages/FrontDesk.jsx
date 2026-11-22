@@ -58,7 +58,6 @@ export default function FrontDesk({ user }) {
             setLoading(true);
 
             const response = await fetch(API_URL);
-
             if (!response.ok) {
                 throw new Error("Server error " + response.status);
             }
@@ -70,8 +69,7 @@ export default function FrontDesk({ user }) {
             );
         } catch (error) {
             console.error("Failed to load payments:", error);
-            alert("Hindi ma-load ang payment records.");
-        } finally {
+                    } finally {
             setLoading(false);
         }
     };
@@ -132,7 +130,7 @@ export default function FrontDesk({ user }) {
         setEditing(null);
         setModalMode("add");
     };
-
+//pang edit ng existing payment record
     const openEdit = (payment) => {
         const totalDays = Number(
             payment.durationDays || parseInt(payment.duration, 10) || 0
@@ -140,7 +138,7 @@ export default function FrontDesk({ user }) {
 
         const baseDays = getBaseDays(payment.plan);
         const extraDays = Math.max(0, totalDays - baseDays);
-
+//pogi ako
         setForm({
             uid: payment.uid || "",
             name: payment.name || "",
@@ -169,7 +167,7 @@ export default function FrontDesk({ user }) {
         const selected = plans.find(
             (plan) => plan.name === planName
         );
-
+//
         setForm((previous) => ({
             ...previous,
             plan: planName,
@@ -182,26 +180,22 @@ export default function FrontDesk({ user }) {
         e.preventDefault();
 
         if (!form.uid.trim()) {
-            alert("Kailangan ang Member UID. Hindi maaaring iwanang blanko.");
-            return;
+                        return;
         }
 
         if (!form.name.trim() || !form.email.trim() || !form.plan) {
-            alert("Pakikumpleto ang member details at plan.");
-            return;
+                        return;
         }
 
         const amount = Number(form.amount);
         const totalDays = getTotalDays();
 
         if (!Number.isFinite(amount) || amount <= 0) {
-            alert("Invalid payment amount.");
-            return;
+                        return;
         }
 
         if (!Number.isInteger(totalDays) || totalDays <= 0) {
-            alert("Invalid membership duration.");
-            return;
+                        return;
         }
 
         const data = {
@@ -237,26 +231,18 @@ export default function FrontDesk({ user }) {
                 throw new Error(result.message || "Failed to save payment.");
             }
 
-            alert(
-                `Payment saved! Total membership duration: ${totalDays} days.`
-            );
-
+            
             closeModal();
             await loadPayments();
         } catch (error) {
             console.error("Save error:", error);
-            alert(error.message);
-        } finally {
+                    } finally {
             setSaving(false);
         }
     };
 
     const deletePayment = async (payment) => {
-        if (!window.confirm(`Delete the payment record of ${payment.name}?`)) {
-            return;
-        }
-
-        try {
+                try {
             const response = await fetch(`${API_URL}/${payment.id}`, {
                 method: "DELETE"
             });
@@ -267,20 +253,14 @@ export default function FrontDesk({ user }) {
                 throw new Error(result.message || "Delete failed.");
             }
 
-            alert("Payment deleted.");
-            await loadPayments();
+                        await loadPayments();
         } catch (error) {
             console.error("Delete error:", error);
-            alert(error.message);
-        }
+                    }
     };
 
     const approvePayment = async (payment) => {
-        if (!window.confirm(`Approve payment of ${payment.name}?`)) {
-            return;
-        }
-
-        try {
+                try {
             const response = await fetch(
                 `${API_URL}/${payment.id}/status`,
                 {
@@ -298,12 +278,10 @@ export default function FrontDesk({ user }) {
                 throw new Error(data.message || "Approval failed.");
             }
 
-            alert("Payment approved successfully!");
-            await loadPayments();
+                        await loadPayments();
         } catch (error) {
             console.error("Approval error:", error);
-            alert(error.message);
-        }
+                    }
     };
 
     const isExpired = (payment) =>

@@ -17,18 +17,15 @@ export default function Signup() {
         e.preventDefault();
 
         if (!name || !email || !password || !confirmPassword) {
-            alert("Please complete all fields.");
-            return;
+                        return;
         }
 
         if (password !== confirmPassword) {
-            alert("Passwords do not match.");
-            return;
+                        return;
         }
 
         if (password.length < 6) {
-            alert("Password must be at least 6 characters.");
-            return;
+                        return;
         }
 
         try {
@@ -49,17 +46,10 @@ export default function Signup() {
                 role: "member"
             });
 
-            alert("Account created successfully!");
-            navigate("/member", { replace: true });
+                        navigate("/member", { replace: true });
         } catch (error) {
             console.error("SIGNUP ERROR:", error);
-            alert(
-                "Sign up failed!\n\n" +
-                error.code +
-                "\n\n" +
-                error.message
-            );
-        } finally {
+                    } finally {
             setLoading(false);
         }
     };

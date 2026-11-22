@@ -64,9 +64,9 @@ export default function AdminDashboard({ user, onLogout }) {
         }
     }, [searchParams]);
 
-    // ==========================================
+  
     // LOAD ALL REGISTERED MEMBERS FROM FIRESTORE
-    // ==========================================
+
 
     const loadMembers = async () => {
         try {
@@ -87,8 +87,7 @@ export default function AdminDashboard({ user, onLogout }) {
 
         } catch (error) {
             console.error("Failed to load members:", error);
-            alert("Failed to load members. Please check Firestore permissions.");
-        } finally {
+                    } finally {
             setMembersLoading(false);
         }
     };
@@ -100,15 +99,11 @@ export default function AdminDashboard({ user, onLogout }) {
     const loadPayments = async () => {
         try {
             setLoading(true);
-
             const response = await fetch(API_URL);
-
             if (!response.ok) {
                 throw new Error("Server error " + response.status);
             }
-
             const data = await response.json();
-
             setPayments(
                 [...data].sort(
                     (a, b) => Number(b.id) - Number(a.id)
@@ -127,9 +122,9 @@ export default function AdminDashboard({ user, onLogout }) {
         loadMembers();
     }, []);
 
-    // ==========================================
+   
     // GET MEMBER MEMBERSHIP INFORMATION
-    // ==========================================
+  
 
     const getMemberInfo = (member) => {
         const memberPayments = payments.filter(
@@ -191,18 +186,9 @@ export default function AdminDashboard({ user, onLogout }) {
         );
     });
 
-    // ==========================================
     // APPROVE PAYMENT
-    // ==========================================
-
     const approvePayment = async (payment) => {
-        if (!window.confirm(
-            `Approve payment of ${payment.name}?`
-        )) {
-            return;
-        }
-
-        try {
+                try {
             const response = await fetch(
                 `${API_URL}/${payment.id}/status`,
                 {
@@ -224,20 +210,15 @@ export default function AdminDashboard({ user, onLogout }) {
                 );
             }
 
-            alert("Payment approved successfully!");
-
+            
             await loadPayments();
 
         } catch (error) {
             console.error("Approval error:", error);
-            alert(error.message);
-        }
+                    }
     };
 
-    // ==========================================
     // PAYMENT STATISTICS
-    // ==========================================
-
     const totalPayments = payments.reduce(
         (total, payment) =>
             total + Number(payment.amount || 0),

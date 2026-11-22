@@ -113,8 +113,7 @@ export default function App() {
             navigate("/", { replace: true });
         } catch (error) {
             console.error(error);
-            alert("Logout failed: " + error.message);
-        }
+                    }
     };
 
     if (loading) {

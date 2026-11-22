@@ -11,10 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ==========================================
-// MYSQL DATABASE CONNECTION
-// ==========================================
 
+// MYSQL DATABASE CONNECTION
 const db = mysql.createPool({
     host: "localhost",
     user: "root",
@@ -98,18 +96,14 @@ app.get("/", (req, res) => {
     });
 });
 
-// ==========================================
 // GET MEMBERSHIP PLANS
-// ==========================================
+
 
 app.get("/api/plans", (req, res) => {
     res.json(membershipPlans);
 });
 
-// ==========================================
 // UPDATE PLAN PRICE
-// ==========================================
-
 const updatePlanPrice = (req, res) => {
     const plan = membershipPlans.find(
         (item) => item.id === Number(req.params.id)
@@ -150,10 +144,7 @@ const updatePlanPrice = (req, res) => {
 app.patch("/api/plans/:id", updatePlanPrice);
 app.put("/api/plans/:id", updatePlanPrice);
 
-// ==========================================
 // GET ALL PAYMENT RECORDS
-// ==========================================
-
 app.get("/api/payments", async (req, res) => {
     try {
         const [payments] = await db.query(`
@@ -186,10 +177,7 @@ app.get("/api/payments", async (req, res) => {
     }
 });
 
-// ==========================================
 // ADD NEW PAYMENT
-// ==========================================
-
 app.post("/api/payments", async (req, res) => {
     try {
         const {
@@ -274,10 +262,8 @@ app.post("/api/payments", async (req, res) => {
     }
 });
 
-// ==========================================
-// EDIT PAYMENT
-// ==========================================
 
+// EDIT PAYMENT
 app.put("/api/payments/:id", async (req, res) => {
     try {
         const paymentId = Number(req.params.id);
@@ -390,9 +376,6 @@ app.put("/api/payments/:id", async (req, res) => {
     }
 });
 
-// ==========================================
-// DELETE PAYMENT
-// ==========================================
 
 app.delete("/api/payments/:id", async (req, res) => {
     try {
@@ -428,11 +411,8 @@ app.delete("/api/payments/:id", async (req, res) => {
     }
 });
 
-// ==========================================
 // APPROVE PAYMENT
 // EXTEND EXISTING MEMBERSHIP
-// ==========================================
-
 app.patch("/api/payments/:id/status", async (req, res) => {
     let connection;
 
@@ -445,7 +425,6 @@ app.patch("/api/payments/:id/status", async (req, res) => {
                 message: "Invalid payment ID."
             });
         }
-
         if (status !== "Approved") {
             return res.status(400).json({
                 message: "Invalid payment status."
@@ -565,10 +544,7 @@ app.patch("/api/payments/:id/status", async (req, res) => {
     }
 });
 
-// ==========================================
 // START SERVER
-// ==========================================
-
 app.listen(PORT, () => {
     console.log(
         `Server is running on http://localhost:${PORT}`

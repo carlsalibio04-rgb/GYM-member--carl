@@ -64,8 +64,7 @@ export default function PriceEdit({ user, onLogout }) {
         const newPrice = Number(prices[plan.id]);
 
         if (!Number.isFinite(newPrice) || newPrice <= 0) {
-            alert("Please enter a valid price.");
-            return;
+                        return;
         }
 
         try {
@@ -92,14 +91,10 @@ export default function PriceEdit({ user, onLogout }) {
 
             await loadPlans();
 
-            alert(
-                `${plan.name} price updated successfully to ₱${newPrice}!`
-            );
-
+            
         } catch (err) {
             console.error("PRICE UPDATE ERROR:", err);
-            alert("Unable to update price: " + err.message);
-        } finally {
+                    } finally {
             setSavingId(null);
         }
     };
