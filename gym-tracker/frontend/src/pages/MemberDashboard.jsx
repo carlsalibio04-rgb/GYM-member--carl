@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-const PAYMENTS_URL = "http://localhost:8080/api/payments";
+import { API_BASE_URL } from "../lib/api.js";
+const PAYMENTS_URL = `${API_BASE_URL}/api/payments`;
 
 
 const getTimeLeft = (expirationDate, now) => {
@@ -47,7 +48,7 @@ export default function MemberDashboard({ user, onLogout }) {
                 setLoading(true);
                 setError("");
 
-                 const response = await fetch("http://localhost:8080/api/plans");
+                 const response = await fetch(`${API_BASE_URL}/api/plans`);
 
                 if (!response.ok) {
                     throw new Error("Failed to load membership plans.");
