@@ -13,7 +13,6 @@ app.use(express.json());
 
 
 // MYSQL DATABASE CONNECTION
-// MYSQL DATABASE CONNECTION
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
