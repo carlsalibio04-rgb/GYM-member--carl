@@ -4,8 +4,9 @@ import { useSearchParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase.js";
 import "./AdminDashboard.css";
+import { API_BASE_URL } from "../lib/api.js";
 
-const API_URL = "http://localhost:8080/api/payments";
+const API_URL = `${API_BASE_URL}/api/payments`;
 
 const getTimeLeft = (expirationDate, now) => {
     if (!expirationDate) return null;
