@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 {
   "id": "/",
@@ -10,18 +11,41 @@
   "background_color": "#111827",
   "theme_color": "#111827",
   "orientation": "portrait",
+=======
+{
+  "name": "Gym Membership System",
+  "short_name": "Gym System",
+  "description": "Gym Membership and Payment Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111827",
+  "lang": "en",
+  "scope": "/",
+>>>>>>> 1471f6b903952fa39b6a5b8e079249a34f1f3ce3
   "icons": [
     {
       "src": "/pwa-192x192.png",
       "sizes": "192x192",
+<<<<<<< HEAD
       "type": "image/png",
       "purpose": "any"
+=======
+      "type": "image/png"
+>>>>>>> 1471f6b903952fa39b6a5b8e079249a34f1f3ce3
     },
     {
       "src": "/pwa-512x512.png",
       "sizes": "512x512",
+<<<<<<< HEAD
       "type": "image/png",
       "purpose": "any maskable"
     }
   ]
 }
+=======
+      "type": "image/png"
+    }
+  ]
+}
+>>>>>>> 1471f6b903952fa39b6a5b8e079249a34f1f3ce3

@@ -9,6 +9,7 @@ import "./index.css";
 
 import App from "./App.jsx";
 
+<<<<<<< HEAD
 // Register PWA Service Worker
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -30,6 +31,14 @@ if ("serviceWorker" in navigator) {
 }
 
 // Render React Application
+=======
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    });
+}
+
+>>>>>>> 1471f6b903952fa39b6a5b8e079249a34f1f3ce3
 createRoot(document.getElementById("root")).render(
     <StrictMode>
         <BrowserRouter>
