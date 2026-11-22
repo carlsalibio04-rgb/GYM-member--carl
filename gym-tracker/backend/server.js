@@ -259,7 +259,13 @@ app.post("/api/payments", async (req, res) => {
         });
 
     } catch (error) {
-        console.error("POST Payment Error:", error);
+        console.error("POST Payment Error:", {
+            message: error.message,
+            code: error.code,
+            errno: error.errno,
+            sqlState: error.sqlState,
+            sqlMessage: error.sqlMessage
+        });
 
         res.status(500).json({
             message: "Failed to submit payment."
