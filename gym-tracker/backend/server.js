@@ -30,7 +30,7 @@ async function testConnection() {
         console.log("MySQL Database Connected!");
         connection.release();
     } catch (error) {
-        console.error("Database Connection Failed:", error.message);
+        console.error("Database Connection Failed:", error);
     }
 }
 
