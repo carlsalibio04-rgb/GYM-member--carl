@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../lib/api.js";
 
 export default function Payment({ user }) {
     const location = useLocation();
@@ -43,7 +44,7 @@ export default function Payment({ user }) {
             }
 
             const response = await fetch(
-                "http://localhost:8080/api/payments",
+                `${API_BASE_URL}/api/payments`,
                 {
                     method: "POST",
                     headers: {
