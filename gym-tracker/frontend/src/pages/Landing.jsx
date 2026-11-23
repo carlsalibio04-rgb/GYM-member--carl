@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import "./LandingAnimations.css";
 
 export default function Landing() {
     return (
@@ -93,20 +94,43 @@ export default function Landing() {
                         </div>
 
                         <div className="col-lg-6">
-                            <div className="card border-0 shadow-lg landing-membership-card">
-                                <div className="card-body p-4 p-lg-5">
-                                    <div className="d-flex justify-content-between mb-4">
-                                        <span className="text-secondary small">MEMBERSHIP</span>
-                                        <span className="badge text-bg-success">● ACTIVE</span>
-                                    </div>
-                                    <div className="display-1 fw-bold text-white">30</div>
-                                    <p className="text-secondary">DAYS OF MOMENTUM</p>
-                                    <hr className="border-secondary" />
-                                    <div className="d-flex justify-content-between align-items-end">
-                                        <span className="text-secondary">MONTHLY PLAN</span>
-                                        <strong className="fs-2 text-danger">₱500</strong>
-                                    </div>
-                                </div>
+                            <div className="momentum-artwork" aria-label="Animated gym dumbbell illustration">
+                                <div className="art-glow"></div>
+                                <div className="orbit orbit-one"></div>
+                                <div className="orbit orbit-two"></div>
+                                <span className="art-dot dot-one"></span>
+                                <span className="art-dot dot-two"></span>
+                                <span className="art-dot dot-three"></span>
+                                <svg className="gym-svg" viewBox="0 0 520 420" role="img" aria-labelledby="gymSvgTitle">
+                                    <title id="gymSvgTitle">Momentum gym animated dumbbell</title>
+                                    <defs>
+                                        <linearGradient id="barGradient" x1="0" x2="1">
+                                            <stop offset="0%" stopColor="#f87171" />
+                                            <stop offset="50%" stopColor="#dc2626" />
+                                            <stop offset="100%" stopColor="#991b1b" />
+                                        </linearGradient>
+                                        <linearGradient id="weightGradient" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stopColor="#475569" />
+                                            <stop offset="100%" stopColor="#111827" />
+                                        </linearGradient>
+                                        <filter id="svgGlow">
+                                            <feGaussianBlur stdDeviation="8" result="blur" />
+                                            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                        </filter>
+                                    </defs>
+                                    <circle cx="260" cy="210" r="142" fill="none" stroke="#dc3545" strokeOpacity=".18" strokeWidth="1" strokeDasharray="5 12" className="svg-dash" />
+                                    <g className="dumbbell-float" filter="url(#svgGlow)">
+                                        <rect x="145" y="192" width="230" height="36" rx="18" fill="url(#barGradient)" />
+                                        <rect x="110" y="145" width="48" height="130" rx="13" fill="url(#weightGradient)" stroke="#f87171" strokeWidth="3" />
+                                        <rect x="85" y="165" width="30" height="90" rx="9" fill="#dc2626" />
+                                        <rect x="362" y="145" width="48" height="130" rx="13" fill="url(#weightGradient)" stroke="#f87171" strokeWidth="3" />
+                                        <rect x="405" y="165" width="30" height="90" rx="9" fill="#dc2626" />
+                                        <path d="M125 160v100M377 160v100" stroke="#94a3b8" strokeOpacity=".5" strokeWidth="3" />
+                                    </g>
+                                    <path d="M160 320 Q260 365 360 320" fill="none" stroke="#dc3545" strokeOpacity=".5" strokeWidth="3" strokeLinecap="round" className="svg-pulse" />
+                                    <text x="260" y="385" textAnchor="middle" fill="#f8fafc" fontSize="18" fontWeight="800" letterSpacing="7">MOMENTUM</text>
+                                </svg>
+                                <div className="art-caption"><span className="caption-line"></span><span>TRAIN WITH PURPOSE</span></div>
                             </div>
                         </div>
                     </div>
